@@ -10,25 +10,34 @@
 </head>
 
 <body class="bg-gradient-to-b from-blue-100 via-white to-blue-50 text-gray-800 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
+    <div class="container mx-auto px-4 py-8 animate__animated animate__fadeIn">
         <div class="text-center">
             <h1 class="text-4xl font-bold mb-6 text-blue-600">Weather App</h1>
-            <p class="text-lg text-gray-600">Explore the current weather in capitals worldwide</p>
+            <p class="text-lg text-gray-600 mb-6">Explore the current weather in capitals worldwide</p>
         </div>
 
         <div class="text-center mb-6">
             <input id="searchInput" type="text" placeholder="Search by country name..."
-                class="border border-gray-300 rounded-lg p-3 w-2/3 sm:w-1/2 lg:w-1/3 shadow-sm focus:outline-none focus:ring focus:ring-blue-300">
-            <button id="searchButton" class="bg-blue-500 text-white p-3 rounded-lg ml-2">Search</button>
+                class="border border-gray-300 rounded-lg p-3 w-2/3 sm:w-1/2 lg:w-1/3 shadow-sm focus:outline-none focus:ring focus:ring-blue-300 transition-all duration-200 hover:ring-2 hover:ring-blue-500">
+            <button id="searchButton"
+                class="bg-blue-500 text-white p-3 rounded-lg ml-2 transition-all duration-200 hover:bg-blue-600 hover:scale-105">Search</button>
             <!-- Refresh Button -->
-            <button id="refreshButton" class="bg-green-500 text-white p-3 rounded-lg ml-2">Refresh</button>
+            <button id="refreshButton"
+                class="bg-green-500 text-white p-3 rounded-lg ml-2 transition-all duration-200 hover:bg-green-600 hover:scale-105">Refresh</button>
         </div>
 
         <!-- Error message -->
-        <div id="errorMessage" class="text-red-500 font-bold text-center hidden">Sorry, we couldn't find that country!</div>
+        <div id="errorMessage" class="text-red-500 font-bold text-center hidden">Sorry, we couldn't find that country!
+        </div>
 
         <!-- Loading Indicator -->
-        <div id="loadingIndicator" class="text-center text-lg text-gray-600 hidden">Loading...</div>
+        <div id="loadingIndicator" class="text-center hidden animate__animated animate__fadeIn">
+            <div class="flex justify-center items-center">
+                <div class="w-16 h-16 border-4 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
+            </div>
+            <p class="mt-4 text-lg text-gray-600">Loading Data</p>
+        </div>
+
 
         <div id="cityCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
             <!-- Cards will be dynamically inserted here -->
@@ -126,7 +135,7 @@
 
         function displayCityWeather(data, countryName) {
             const card = document.createElement("div");
-            card.className = `bg-gradient-to-r from-blue-50 via-white to-blue-50 shadow-lg rounded-lg p-6 flex flex-col items-center text-center border border-gray-200 transition-transform transform hover:scale-105`;
+            card.className = `bg-gradient-to-r from-blue-50 via-white to-blue-50 shadow-lg rounded-lg p-6 flex flex-col items-center text-center border border-gray-200 transition-transform transform hover:scale-105 hover:shadow-xl hover:transition-all duration-300`;
             card.innerHTML = `
                 <h3 class="text-2xl font-bold text-blue-800 mb-3">${data.name}, ${countryName}</h3>
                 <div class="bg-white p-2 rounded-full shadow-sm mb-4">
