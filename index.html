@@ -12,6 +12,13 @@
             width: 60px;
             height: 60px;
         }
+
+        .loading-indicator {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2rem;
+            color: #4a4a4a;
+        }
     </style>
 </head>
 
@@ -27,19 +34,22 @@
                 class="border border-gray-300 rounded-lg p-3 w-2/3 sm:w-1/2 lg:w-1/3 shadow-sm focus:outline-none focus:ring focus:ring-blue-300">
         </div>
 
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="loading-indicator hidden">Loading...</div>
 
         <div id="cityCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-
+            <!-- Cards will be dynamically inserted here -->
         </div>
     </div>
 
     <script>
         const WEATHER_API_KEY = "e1ebc168bf3404e44192a12d0e5d0587";
         const cityCards = document.getElementById("cityCards");
+        const loadingIndicator = document.getElementById("loadingIndicator");
 
         let countryData = [];
+        let weatherCache = {}; // Cache to store weather data
 
-        // Fetch countries from REST Countries API
         // Fetch countries from REST Countries API
         fetch("https://restcountries.com/v3.1/all")
             .then(response => response.json())
@@ -50,7 +60,7 @@
                         capital: country.capital[0], // Get the first capital
                         countryName: country.name.common, // Get the country name
                     }));
-                countryData.forEach(fetchWeatherForCity); // Display all by default
+                displayFilteredCards(countryData); // Display all by default
             })
             .catch(() => console.error("Failed to fetch country data"));
 
@@ -65,46 +75,62 @@
 
         function displayFilteredCards(filteredData) {
             cityCards.innerHTML = ""; // Clear existing cards
-            filteredData.forEach(fetchWeatherForCity); // Display filtered cards
+            loadingIndicator.classList.remove("hidden"); // Show loading indicator
+
+            // Use Promise.all to wait for all weather data to be fetched
+            Promise.all(filteredData.map(fetchWeatherForCity))
+                .finally(() => {
+                    loadingIndicator.classList.add("hidden"); // Hide loading indicator after all cards are added
+                });
         }
 
         function fetchWeatherForCity({ capital, countryName }) {
-            fetch(`https://api.openweathermap.org/data/2.5/weather?q=${capital}&appid=${WEATHER_API_KEY}&units=metric`)
+            // Check if the weather data for the city is already in cache
+            if (weatherCache[capital]) {
+                displayCityWeather(weatherCache[capital], countryName); // Use cached data
+                return Promise.resolve(); // Return a resolved promise since data is already fetched
+            }
+
+            // Fetch weather data if not in cache
+            return fetch(`https://api.openweathermap.org/data/2.5/weather?q=${capital}&appid=${WEATHER_API_KEY}&units=metric`)
                 .then(response => response.json())
-                .then(data => displayCityWeather(data, countryName))
+                .then(data => {
+                    weatherCache[capital] = data; // Cache the weather data
+                    displayCityWeather(data, countryName);
+                })
                 .catch(() => console.error(`Failed to fetch weather for ${capital}`));
         }
 
         function displayCityWeather(data, countryName) {
             const card = document.createElement("div");
+            card.id = `card-${countryName}`; // Ensure unique ID for each country
             card.className = `
-        bg-gradient-to-r from-blue-50 via-white to-blue-50 
-        shadow-lg rounded-lg p-6 flex flex-col items-center text-center 
-        border border-gray-200 transition-transform transform hover:scale-105
-    `;
+                bg-gradient-to-r from-blue-50 via-white to-blue-50 
+                shadow-lg rounded-lg p-6 flex flex-col items-center text-center 
+                border border-gray-200 transition-transform transform hover:scale-105
+            `;
             card.innerHTML = `
-        <h3 class="text-2xl font-bold text-blue-800 mb-3">${data.name}, ${countryName}</h3>
-        <div class="bg-white p-2 rounded-full shadow-sm mb-4">
-            <img 
-                src="https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png" 
-                alt="Weather Icon" 
-                class="weather-icon w-16 h-16">
-        </div>
-        <div class="text-gray-700 space-y-2">
-            <p class="text-lg">
-                🌡️ <span class="font-medium">Temperature:</span> <span class="font-semibold">${data.main.temp}°C</span>
-            </p>
-            <p class="text-lg">
-                🌤️ <span class="font-medium">Weather:</span> <span class="capitalize font-semibold">${data.weather[0].description}</span>
-            </p>
-            <p class="text-lg">
-                💧 <span class="font-medium">Humidity:</span> <span class="font-semibold">${data.main.humidity}%</span>
-            </p>
-        </div>
-    `;
+                <h3 class="text-2xl font-bold text-blue-800 mb-3">${data.name}, ${countryName}</h3>
+                <div class="bg-white p-2 rounded-full shadow-sm mb-4">
+                    <img 
+                        src="https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png" 
+                        alt="Weather Icon" 
+                        class="weather-icon w-16 h-16">
+                </div>
+                <div class="text-gray-700 space-y-2">
+                    <p class="text-lg">
+                        🌡️ <span class="font-medium">Temperature:</span> <span class="font-semibold">${data.main.temp}°C</span>
+                    </p>
+                    <p class="text-lg">
+                        🌤️ <span class="font-medium">Weather:</span> <span class="capitalize font-semibold">${data.weather[0].description}</span>
+                    </p>
+                    <p class="text-lg">
+                        💧 <span class="font-medium">Humidity:</span> <span class="font-semibold">${data.main.humidity}%</span>
+                    </p>
+                </div>
+            `;
             cityCards.appendChild(card);
         }
-
     </script>
 </body>
 
