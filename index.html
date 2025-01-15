@@ -1,52 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather App</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .weather-icon {
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
         }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
-    <div class="container mt-5">
+
+<body class="bg-gradient-to-b from-blue-100 via-white to-blue-50 text-gray-800 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
         <div class="text-center">
-            <h1 class="text-3xl font-bold mb-4">Weather App</h1>
-            <p class="text-lg">Current weather in all capitals:</p>
+            <h1 class="text-4xl font-bold mb-6 text-blue-600">Weather App</h1>
+            <p class="text-lg text-gray-600">Explore the current weather in all capitals worldwide</p>
         </div>
-        <div id="cityCards" class="row mt-5">
-            <!-- Cards will be dynamically inserted here -->
+
+        <div class="text-center mb-6">
+            <input id="searchInput" type="text" placeholder="Search by country name..."
+                class="border border-gray-300 rounded-lg p-3 w-2/3 sm:w-1/2 lg:w-1/3 shadow-sm focus:outline-none focus:ring focus:ring-blue-300">
+        </div>
+
+
+        <div id="cityCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+
         </div>
     </div>
 
-    <!-- JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const WEATHER_API_KEY = "e1ebc168bf3404e44192a12d0e5d0587";
         const cityCards = document.getElementById("cityCards");
 
+        let countryData = [];
+
+        // Fetch countries from REST Countries API
         // Fetch countries from REST Countries API
         fetch("https://restcountries.com/v3.1/all")
             .then(response => response.json())
             .then(countries => {
-                const capitalCountryPairs = countries
+                countryData = countries
                     .filter(country => country.capital && country.capital.length > 0) // Ensure capital exists
                     .map(country => ({
                         capital: country.capital[0], // Get the first capital
                         countryName: country.name.common, // Get the country name
                     }));
-                capitalCountryPairs.forEach(fetchWeatherForCity);
+                countryData.forEach(fetchWeatherForCity); // Display all by default
             })
             .catch(() => console.error("Failed to fetch country data"));
 
-        // Fetch weather for a single city
+        // Add event listener for search
+        document.getElementById("searchInput").addEventListener("input", event => {
+            const searchQuery = event.target.value.toLowerCase();
+            const filteredData = countryData.filter(({ countryName }) =>
+                countryName.toLowerCase().includes(searchQuery)
+            );
+            displayFilteredCards(filteredData);
+        });
+
+        function displayFilteredCards(filteredData) {
+            cityCards.innerHTML = ""; // Clear existing cards
+            filteredData.forEach(fetchWeatherForCity); // Display filtered cards
+        }
+
         function fetchWeatherForCity({ capital, countryName }) {
             fetch(`https://api.openweathermap.org/data/2.5/weather?q=${capital}&appid=${WEATHER_API_KEY}&units=metric`)
                 .then(response => response.json())
@@ -56,23 +77,35 @@
 
         function displayCityWeather(data, countryName) {
             const card = document.createElement("div");
-            card.className = "col-lg-4 col-md-6 col-sm-12 mb-4";
+            card.className = `
+        bg-gradient-to-r from-blue-50 via-white to-blue-50 
+        shadow-lg rounded-lg p-6 flex flex-col items-center text-center 
+        border border-gray-200 transition-transform transform hover:scale-105
+    `;
             card.innerHTML = `
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">${data.name}, ${countryName}</h5>
-                        <img 
-                            src="https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png" 
-                            alt="Weather Icon" 
-                            class="weather-icon">
-                        <p class="card-text">Temperature: ${data.main.temp}°C</p>
-                        <p class="card-text">Weather: ${data.weather[0].description}</p>
-                        <p class="card-text">Humidity: ${data.main.humidity}%</p>
-                    </div>
-                </div>
-            `;
+        <h3 class="text-2xl font-bold text-blue-800 mb-3">${data.name}, ${countryName}</h3>
+        <div class="bg-white p-2 rounded-full shadow-sm mb-4">
+            <img 
+                src="https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png" 
+                alt="Weather Icon" 
+                class="weather-icon w-16 h-16">
+        </div>
+        <div class="text-gray-700 space-y-2">
+            <p class="text-lg">
+                🌡️ <span class="font-medium">Temperature:</span> <span class="font-semibold">${data.main.temp}°C</span>
+            </p>
+            <p class="text-lg">
+                🌤️ <span class="font-medium">Weather:</span> <span class="capitalize font-semibold">${data.weather[0].description}</span>
+            </p>
+            <p class="text-lg">
+                💧 <span class="font-medium">Humidity:</span> <span class="font-semibold">${data.main.humidity}%</span>
+            </p>
+        </div>
+    `;
             cityCards.appendChild(card);
         }
+
     </script>
 </body>
+
 </html>
