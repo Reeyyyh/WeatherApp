@@ -45,7 +45,7 @@
         const refreshButton = document.getElementById("refreshButton");
 
         let countryData = [];
-        let weatherCache = {}; // Cache to store weather data
+        let weatherCache = {};
 
         // Fetch countries from REST Countries API
         fetch("https://restcountries.com/v3.1/all")
@@ -54,22 +54,22 @@
                 countryData = countries
                     .filter(country => country.capital && country.capital.length > 0) // Ensure capital exists
                     .map(country => ({
-                        capital: country.capital[0], // Get the first capital
-                        countryName: country.name.common, // Get the country name
+                        capital: country.capital[0],
+                        countryName: country.name.common,
                     }));
-                displayRandomCards(); // Display 9 random countries at page load
+                displayRandomCards();
             })
             .catch(() => console.error("Failed to fetch country data"));
 
         // Display 9 random country weather cards
         function displayRandomCards() {
-            const randomCountries = getRandomCountries(9); // Get 9 random countries
-            cityCards.innerHTML = ""; // Clear existing cards
+            const randomCountries = getRandomCountries(9);
+            cityCards.innerHTML = "";
             loadingIndicator.classList.remove("hidden");
 
             Promise.all(randomCountries.map(fetchWeatherForCity))
                 .finally(() => {
-                    loadingIndicator.classList.add("hidden"); // Hide loading indicator after all cards are added
+                    loadingIndicator.classList.add("hidden");
                 });
         }
 
@@ -103,7 +103,8 @@
 
         // Add event listener for refresh
         refreshButton.addEventListener("click", () => {
-            displayRandomCards(); // Refresh the random 9 cards
+            searchInput.value = '';
+            displayRandomCards();
         });
 
         function fetchWeatherForCity({ capital, countryName }) {
