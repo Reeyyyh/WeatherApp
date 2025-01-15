@@ -5,6 +5,7 @@ const searchButton = document.getElementById("searchButton");
 const searchInput = document.getElementById("searchInput");
 const errorMessage = document.getElementById("errorMessage");
 const refreshButton = document.getElementById("refreshButton");
+const themeToggleButton = document.getElementById("themeToggleButton");
 
 let countryData = [];
 let weatherCache = {};
@@ -14,7 +15,7 @@ fetch("https://restcountries.com/v3.1/all")
     .then(response => response.json())
     .then(countries => {
         countryData = countries
-            .filter(country => country.capital && country.capital.length > 0) // Ensure capital exists
+            .filter(country => country.capital && country.capital.length > 0)
             .map(country => ({
                 capital: country.capital[0],
                 countryName: country.name.common,
@@ -41,7 +42,7 @@ function getRandomCountries(count) {
     return shuffled.slice(0, count);
 }
 
-// Add event listener for search
+// Search event listener
 searchButton.addEventListener("click", () => {
     const searchQuery = searchInput.value.trim().toLowerCase();
     if (searchQuery) {
@@ -49,71 +50,62 @@ searchButton.addEventListener("click", () => {
             countryName.toLowerCase() === searchQuery
         );
         if (country) {
-            errorMessage.classList.add("hidden"); // Hide error message if country is found
-            cityCards.innerHTML = ""; // Clear previous cards before showing search result
-            loadingIndicator.classList.remove("hidden"); // Show loading indicator
+            errorMessage.classList.add("hidden");
+            cityCards.innerHTML = "";
+            loadingIndicator.classList.remove("hidden");
             fetchWeatherForCity(country).finally(() => {
-                loadingIndicator.classList.add("hidden"); // Hide loading indicator after fetch
+                loadingIndicator.classList.add("hidden");
             });
         } else {
-            cityCards.innerHTML = ""; // Clear previous cards
-            errorMessage.classList.remove("hidden"); // Show error message if no country is found
-            loadingIndicator.classList.add("hidden"); // Hide loading indicator in case of error
+            cityCards.innerHTML = "";
+            errorMessage.classList.remove("hidden");
+            loadingIndicator.classList.add("hidden");
         }
     }
 });
 
-// Add event listener for refresh
+// Refresh event listener
 refreshButton.addEventListener("click", () => {
     searchInput.value = '';
     displayRandomCards();
 });
 
+// Fetch weather data for a city
 function fetchWeatherForCity({ capital, countryName }) {
-    // Check if the weather data for the city is already in cache
     if (weatherCache[capital]) {
-        displayCityWeather(weatherCache[capital], countryName); // Use cached data
-        return Promise.resolve(); // Return a resolved promise since data is already fetched
+        displayCityWeather(weatherCache[capital], countryName);
+        return Promise.resolve();
     }
 
-    // Fetch weather data if not in cache
     return fetch(`https://api.openweathermap.org/data/2.5/weather?q=${capital}&appid=${WEATHER_API_KEY}&units=metric`)
         .then(response => response.json())
         .then(data => {
-            weatherCache[capital] = data; // Cache the weather data
+            weatherCache[capital] = data;
             displayCityWeather(data, countryName);
         })
         .catch(() => console.error(`Failed to fetch weather for ${capital}`));
 }
 
+// Display weather card
 function displayCityWeather(data, countryName) {
     const card = document.createElement("div");
-    card.className = `bg-gradient-to-r from-blue-50 via-white to-blue-50 shadow-lg rounded-lg p-6 flex flex-col items-center text-center border border-gray-200 transition-transform transform hover:scale-105 hover:shadow-xl hover:transition-all duration-300`;
+    card.className = `bg-gradient-to-r from-blue-50 via-white to-blue-50 shadow-lg rounded-lg p-6 flex flex-col items-center text-center border border-gray-200 transition-transform transform hover:scale-105 hover:shadow-xl hover:transition-all duration-300 dark:bg-gray-800 dark:border-gray-700`;
     card.innerHTML = `
-                <h3 class="text-2xl font-bold text-blue-800 mb-3">${data.name}, ${countryName}</h3>
-                <div class="bg-white p-2 rounded-full shadow-sm mb-4">
-                    <img src="https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png" alt="Weather Icon" class="weather-icon w-16 h-16">
-                </div>
-                <div class="text-gray-700 space-y-2">
-                    <p class="text-lg">
-                        🌡️ <span class="font-medium">Temperature:</span> <span class="font-semibold">${data.main.temp}°C</span>
-                    </p>
-                    <p class="text-lg">
-                        🌤️ <span class="font-medium">Weather:</span> <span class="capitalize font-semibold">${data.weather[0].description}</span>
-                    </p>
-                    <p class="text-lg">
-                        💧 <span class="font-medium">Humidity:</span> <span class="font-semibold">${data.main.humidity}%</span>
-                    </p>
-                </div>
-            `;
+        <h3 class="text-2xl font-bold text-blue-800 dark:text-blue-400 mb-3">${data.name}, ${countryName}</h3>
+        <div class="bg-white dark:bg-gray-700 p-2 rounded-full shadow-sm mb-4">
+            <img src="https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png" alt="Weather Icon" class="weather-icon w-16 h-16">
+        </div>
+        <div class="text-gray-700 dark:text-gray-300 space-y-2">
+            <p class="text-lg">
+                🌡️ <span class="font-medium">Temperature:</span> <span class="font-semibold">${data.main.temp}°C</span>
+            </p>
+            <p class="text-lg">
+                🌤️ <span class="font-medium">Weather:</span> <span class="capitalize font-semibold">${data.weather[0].description}</span>
+            </p>
+            <p class="text-lg">
+                💧 <span class="font-medium">Humidity:</span> <span class="font-semibold">${data.main.humidity}%</span>
+            </p>
+        </div>
+    `;
     cityCards.appendChild(card);
 }
-
-const themeToggleButton = document.getElementById('themeToggleButton');
-
-// Toggle dark mode
-themeToggleButton.addEventListener('click', () => {
-    document.body.classList.toggle('dark');
-    const isDark = document.body.classList.contains('dark');
-    themeToggleButton.textContent = isDark ? 'Light Mode' : 'Dark Mode';
-});
