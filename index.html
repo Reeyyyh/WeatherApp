@@ -19,7 +19,7 @@
     <div class="container mt-5">
         <div class="text-center">
             <h1 class="text-3xl font-bold mb-4">Weather App</h1>
-            <p class="text-lg">Current weather in capitals:</p>
+            <p class="text-lg">Current weather in all capitals:</p>
         </div>
         <div id="cityCards" class="row mt-5">
             <!-- Cards will be dynamically inserted here -->
@@ -36,29 +36,31 @@
         fetch("https://restcountries.com/v3.1/all")
             .then(response => response.json())
             .then(countries => {
-                const capitals = countries
-                    .map(country => country.capital && country.capital[0]) // Get the first capital
-                    .filter(capital => capital); // Filter out undefined/null capitals
-                capitals.slice(0, 10).forEach(fetchWeatherForCity); // Limit to 10 capitals for demo
+                const capitalCountryPairs = countries
+                    .filter(country => country.capital && country.capital.length > 0) // Ensure capital exists
+                    .map(country => ({
+                        capital: country.capital[0], // Get the first capital
+                        countryName: country.name.common, // Get the country name
+                    }));
+                capitalCountryPairs.forEach(fetchWeatherForCity);
             })
             .catch(() => console.error("Failed to fetch country data"));
 
         // Fetch weather for a single city
-        function fetchWeatherForCity(city) {
-            fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${WEATHER_API_KEY}&units=metric`)
+        function fetchWeatherForCity({ capital, countryName }) {
+            fetch(`https://api.openweathermap.org/data/2.5/weather?q=${capital}&appid=${WEATHER_API_KEY}&units=metric`)
                 .then(response => response.json())
-                .then(data => displayCityWeather(data))
-                .catch(() => console.error(`Failed to fetch weather for ${city}`));
+                .then(data => displayCityWeather(data, countryName))
+                .catch(() => console.error(`Failed to fetch weather for ${capital}`));
         }
 
-        // Display weather data in a card
-        function displayCityWeather(data) {
+        function displayCityWeather(data, countryName) {
             const card = document.createElement("div");
             card.className = "col-lg-4 col-md-6 col-sm-12 mb-4";
             card.innerHTML = `
                 <div class="card shadow-sm">
                     <div class="card-body">
-                        <h5 class="card-title">${data.name}</h5>
+                        <h5 class="card-title">${data.name}, ${countryName}</h5>
                         <img 
                             src="https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png" 
                             alt="Weather Icon" 
